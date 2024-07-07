@@ -5,10 +5,10 @@
 // Replace with your network credentials
 //const char* ssid = "ABDUL RAHMAN";
 //const char* password = "58150812";
-//const char* ssid = "Pakdiyaa2";
-//const char* password = "belikodata";
-const char* ssid = "Bagi2 Rezeki";
-const char* password = "88888888";
+const char* ssid = "Pakdiyaa2";
+const char* password = "belikodata";
+// const char* ssid = "Bagi2 Rezeki";
+// const char* password = "88888888";
 
 // Replace with your Telegram BOT API token
 const char* BOTtoken = "7479955281:AAEVEQwbw8high8CmAlub9Z8oam2Z7Um_eY";
@@ -32,6 +32,8 @@ UniversalTelegramBot bot(BOTtoken, client);
 unsigned long lastTime = 0;
 unsigned long timerDelay = 10000;
 
+String allCommand = "/checkMode untuk mengecek Mode\n\n/setActive untuk mengaktifkan Mode Active\n\n/setLazy untuk mengaktifkan Mode Lazy\n\n/check untuk mengecek kelembapan tanah\n\n/startSiram untuk memulai penyiraman\n\n/checkCommand untuk mengetahui semua perintah yang tersedia\n";
+
 void setup() {
   Serial.begin(115200);
   
@@ -51,6 +53,13 @@ void setup() {
   pinMode(trigRelay, OUTPUT);
 
   digitalWrite(trigRelay, LOW);
+
+  Serial.println("========== [BOT STARTED] ==========");
+  String startingMessage = "=== [BOT started with ";
+  startingMessage = (currentMode == ACTIVE) ? startingMessage + "ACTIVE Mode" : startingMessage + "LAZY Mode";
+  startingMessage = startingMessage + "] ===";
+  bot.sendMessage(chat_id, startingMessage, "");
+  bot.sendMessage(chat_id, allCommand, "");
 }
 
 void loop() {
@@ -81,12 +90,26 @@ void autoWater() {
   Serial.print("Soil Moisture Sensor Value 2: ");
   Serial.println(sensorValue2);
 
-  if(sensorValue1 < 3000 || sensorValue2 < 3000) {         
+  // if(sensorValue1 > 3000 || sensorValue2 > 3000) {         
+  if(sensorValue1 > 1800 || sensorValue2 > 1800) {         
     digitalWrite(trigRelay, HIGH);
+    startSiram = true;
     Serial.println("========== Pompa Menyala ==========");
-  } else {
+    String message = "Tanah kering! Pompa dinyalakan.\n";
+    message = message + "Soil Moisture Sensor Value 1: " + String(sensorValue1) + "\n" +
+                        "Soil Moisture Sensor Value 2: " + String(sensorValue2);
+    bot.sendMessage(chat_id, message, "");
+  }
+  
+  // if (startSiram && sensorValue1 < 3000 && sensorValue2 < 3000) {
+  if (startSiram && sensorValue1 < 1800 && sensorValue2 < 1800) {
     digitalWrite(trigRelay, LOW);
     Serial.println("========== Pompa Mati ==========");
+    String message = "Tanah telah basah! Pompa dimatikan.\n";
+    message = message + "Soil Moisture Sensor Value 1: " + String(sensorValue1) + "\n" +
+                        "Soil Moisture Sensor Value 2: " + String(sensorValue2);
+    bot.sendMessage(chat_id, message, "");
+    startSiram = false;
   }
 }
 
@@ -100,26 +123,34 @@ void lazyWater() {
   Serial.print("Soil Moisture Sensor Value 2: ");
   Serial.println(sensorValue2);
 
-  if(sensorValue1 < 3000 || sensorValue2 < 3000) {         
-    String message = "Tanah kering! Butuh penyiraman.";
+  // if(sensorValue1 > 3000 || sensorValue2 > 3000) {         
+  if(sensorValue1 > 1800 || sensorValue2 > 1800) {         
+    String message = "Tanah kering! Butuh penyiraman.\n";
+    message = message + "Soil Moisture Sensor Value 1: " + String(sensorValue1) + "\n" +
+                        "Soil Moisture Sensor Value 2: " + String(sensorValue2);
     bot.sendMessage(chat_id, message, "");
     Serial.println("========== Tanah Kering ==========");
-    
-    if (startSiram) {
-      digitalWrite(trigRelay, HIGH);
-      Serial.println("========== Pompa Menyala ==========");
-      
-      if (sensorValue1 > 3000 && sensorValue2 > 3000) {
-        digitalWrite(trigRelay, LOW);
-        String message = "Tanah sudah basah.";
-        bot.sendMessage(chat_id, message, "");
-        startSiram = false;
-        Serial.println("========== Pompa Mati ==========");
-      }
-    }
   } else {
     digitalWrite(trigRelay, LOW);
     Serial.println("========== Tanah Basah ==========");
+  }
+
+  if (startSiram) {
+    digitalWrite(trigRelay, HIGH);
+    Serial.println("========== Pompa Menyala ==========");
+    
+    // if (sensorValue1 < 3000 && sensorValue2 < 3000) {
+    if (sensorValue1 < 1800 && sensorValue2 < 1800) {
+      digitalWrite(trigRelay, LOW);
+      String message = "Tanah sudah disiram.";
+      bot.sendMessage(chat_id, message, "");
+      message = "Tanah kering! Butuh penyiraman.\n";
+      message = message + "Soil Moisture Sensor Value 1: " + String(sensorValue1) + "\n" +
+                        "Soil Moisture Sensor Value 2: " + String(sensorValue2);
+      bot.sendMessage(chat_id, message, "");
+      Serial.println("========== Pompa Mati ==========");
+      startSiram = false;
+    }
   }
 }
 
@@ -146,9 +177,13 @@ void handleNewMessages(int numNewMessages) {
     } else if (text == "/startSiram") {
       startSiram = true;
       bot.sendMessage(chat_id, "Penyiraman dimulai", "");
-    } else if (text == "/stopSiram") {
-      startSiram = false;
-      bot.sendMessage(chat_id, "Penyiraman dimulai", "");
+    }
+    // else if (text == "/stopSiram") {
+    //   startSiram = false;
+    //   bot.sendMessage(chat_id, "Penyiraman selesai", "");
+    // }
+    else if(text == "/checkCommand") {
+      bot.sendMessage(chat_id, allCommand, "");
     }
   }
 }
