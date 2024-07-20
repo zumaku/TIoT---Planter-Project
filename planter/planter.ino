@@ -5,10 +5,10 @@
 // Replace with your network credentials
 //const char* ssid = "ABDUL RAHMAN";
 //const char* password = "58150812";
-const char* ssid = "Pakdiyaa2";
-const char* password = "belikodata";
-// const char* ssid = "Bagi2 Rezeki";
-// const char* password = "88888888";
+// const char* ssid = "Pakdiyaa2";
+// const char* password = "belikodata";
+const char* ssid = "dyinii";
+const char* password = "12345678";
 
 // Replace with your Telegram BOT API token
 const char* BOTtoken = "7479955281:AAEVEQwbw8high8CmAlub9Z8oam2Z7Um_eY";
